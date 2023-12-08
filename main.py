@@ -146,7 +146,7 @@ def extract_data(token: str):
 
     # Convert time to Unix timestamp in miliseconds      
     today = datetime.now()
-    yesterday = today - timedelta(days=30)
+    yesterday = today - timedelta(days=1)
     yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
 
     # Download all songs you've listened to "after yesterday", which means in the last 24 hours      
@@ -176,12 +176,11 @@ def extract_data(token: str):
         }
 
         song_df = pd.DataFrame(song_dict, columns = ["song_name", "artist_name", "played_at", "timestamp"])
-        print(song_df)
         return song_df
     else:
         with open(ACCESS_TOKEN_FILE, 'w') as file:
             file.write('')
-        print(r.json())
+        raise Exception(r.message)
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
     # Check if dataframe is empty
@@ -203,7 +202,7 @@ def check_if_valid_data(df: pd.DataFrame) -> bool:
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Calcular la fecha de hace 30 días
-    thirty_days_ago = today - timedelta(days=30)
+    thirty_days_ago = today - timedelta(days=1)
 
     # Obtener las marcas de tiempo del DataFrame
     timestamps = df["timestamp"].tolist()
@@ -235,6 +234,7 @@ def load_data(song_df: pd.DataFrame):
 
     try:
         song_df.to_sql("my_played_tracks", engine, index=False, if_exists='append')
+        print('Datos agregados exitosamente')
     except Exception:
         print("Los datos ya existen en la base de datos.")
 
