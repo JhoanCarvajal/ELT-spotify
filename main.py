@@ -39,7 +39,9 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                     
                 # Validate
                 if check_if_valid_data(song_df):
-                    print("Data valid, proceed to Load stage")
+                    print("Datos válidos!")
+                    
+                    load_data(song_df)
 
                 self.server.shutdown()
 
