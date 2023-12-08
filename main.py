@@ -38,7 +38,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 song_df = extract_data(token)
                     
                 # Validate
-                if check_if_valid_data(song_df):
+                if song_df and check_if_valid_data(song_df):
                     print("Datos válidos!")
                     
                     load_data(song_df)
@@ -180,7 +180,9 @@ def extract_data(token: str):
     else:
         with open(ACCESS_TOKEN_FILE, 'w') as file:
             file.write('')
-        raise Exception(r.message)
+        response = r.json()
+        print('API error:', response['error']['message'])
+        return None
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
     # Check if dataframe is empty
@@ -247,7 +249,7 @@ if __name__ == "__main__":
     if access_token:
         song_df = extract_data(access_token)  
         # Validate
-        if check_if_valid_data(song_df):
+        if song_df and check_if_valid_data(song_df):
             print("Datos válidos!")
             
             load_data(song_df)
