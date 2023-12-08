@@ -146,7 +146,7 @@ def extract_data(token: str):
 
     # Convert time to Unix timestamp in miliseconds      
     today = datetime.now()
-    yesterday = today - timedelta(days=1)
+    yesterday = today - timedelta(days=30)
     yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
 
     # Download all songs you've listened to "after yesterday", which means in the last 24 hours      
@@ -202,7 +202,7 @@ def check_if_valid_data(df: pd.DataFrame) -> bool:
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Calcular la fecha de hace 30 días
-    thirty_days_ago = today - timedelta(days=1)
+    thirty_days_ago = today - timedelta(days=30)
 
     # Obtener las marcas de tiempo del DataFrame
     timestamps = df["timestamp"].tolist()
