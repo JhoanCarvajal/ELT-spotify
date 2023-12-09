@@ -16,7 +16,7 @@ from flask import Flask, request
 
 
 DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
-CLIENT_ID = '630a1013a94a49c9b7bc6509ff0d9dd0'
+CLIENT_ID = '#YOUR_CLIENTE_ID'
 REDIRECT_URI = 'http://localhost:3000'
 ACCESS_TOKEN_FILE = 'access_token.txt'
 CODE_VERIFIER_FILE = 'code_verifier.txt'
@@ -147,6 +147,8 @@ def extract_data(token: str):
     if r.status_code == 200:
         data = r.json()
 
+        # print(data['items'])
+
         song_names = []
         artist_names = []
         played_at_list = []
@@ -168,6 +170,7 @@ def extract_data(token: str):
         }
 
         song_df = pd.DataFrame(song_dict, columns = ["song_name", "artist_name", "played_at", "timestamp"])
+        # print(song_df)
         return song_df
     else:
         with open(ACCESS_TOKEN_FILE, 'w') as file:
