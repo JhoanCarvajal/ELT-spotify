@@ -1,10 +1,9 @@
 import base64
 import hashlib
 import random
-import socketserver
 import string
-import sys
-from urllib.parse import parse_qs, urlencode, urlparse
+import threading
+from urllib.parse import urlencode
 import webbrowser
 
 import sqlalchemy
@@ -13,7 +12,7 @@ import requests
 from datetime import datetime, timedelta
 import sqlite3
 
-from http.server import BaseHTTPRequestHandler
+from flask import Flask, request
 
 
 DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
@@ -22,44 +21,31 @@ REDIRECT_URI = 'http://localhost:3000'
 ACCESS_TOKEN_FILE = 'access_token.txt'
 CODE_VERIFIER_FILE = 'code_verifier.txt'
 
-# Definir el manejador de solicitudes personalizado
-class SimpleRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        # Obtener la ruta solicitada
-        parsed_url = urlparse(self.path)
-        query_params = parse_qs(parsed_url.query)
 
-        code_verifier = read_file(CODE_VERIFIER_FILE)
+app = Flask(__name__)
 
-        code = query_params.get('code', None)
+@app.route('/')
+def handle_redirect():
+    # Capturar los parámetros de la URL
+    code = request.args.get('code')
+    state = request.args.get('state')
 
-        if code_verifier and code:
-            token = get_token(code_verifier, code)
-            if token:
-                song_df = extract_data(token)
-                    
-                # Validate
-                if check_if_valid_data(song_df):
-                    print("Datos válidos!")
-                    
-                    load_data(song_df)
+    # Aquí puedes procesar los datos como lo necesites
+    print(f'Código: {code}, Estado: {state}')
+    code_verifier = read_file(CODE_VERIFIER_FILE)
 
-                self.server.shutdown()
+    if code_verifier and code:
+        token = get_token(code_verifier, code)
+        if token:
+            song_df = extract_data(token)
+                
+            # Validate
+            if check_if_valid_data(song_df):
+                print("Datos válidos!")
+                
+                load_data(song_df)
 
-
-# Configurar y arrancar el servidor
-def runserver(port=3000):
-
-    with socketserver.TCPServer(("", port), SimpleRequestHandler) as httpd:
-        print("Servidor iniciado en el puerto 3000")
-        
-        try:
-            authorize()
-            # Ejecutar el servidor de forma indefinida
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print(" Servidor detenido manualmente.")
-            sys.exit(0)
+    return 'Redirección completada. Puedes cerrar esta ventana.'
 
 
 def read_file(file):
@@ -250,6 +236,11 @@ def load_data(song_df: pd.DataFrame):
     print("Cerrar base de datos exitosamente")
 
 
+def run_flask():
+    # Iniciar el servidor en un hilo separado
+    app.run(port=3000)
+
+
 if __name__ == "__main__":
     access_token = read_file(ACCESS_TOKEN_FILE)
     if access_token:
@@ -260,4 +251,10 @@ if __name__ == "__main__":
             
             load_data(song_df)
     else:
-        runserver()
+        # Iniciar Flask en un hilo separado
+        flask_thread = threading.Thread(target=run_flask)
+        flask_thread.start()
+
+        authorize()
+
+        flask_thread.join()
