@@ -21,21 +21,25 @@ REDIRECT_URI = 'http://localhost:3000'
 ACCESS_TOKEN_FILE = 'access_token.txt'
 CODE_VERIFIER_FILE = 'code_verifier.txt'
 
+access_token_r = ''
+code_verifier_r = ''
+
 
 app = Flask(__name__)
 
 @app.route('/')
 def handle_redirect():
+    global code_verifier_r
     # Capturar los parámetros de la URL
     code = request.args.get('code')
     state = request.args.get('state')
 
     # Aquí puedes procesar los datos como lo necesites
     print(f'Código: {code}, Estado: {state}')
-    code_verifier = read_file(CODE_VERIFIER_FILE)
+    # code_verifier = read_file(CODE_VERIFIER_FILE)
 
-    if code_verifier and code:
-        token = get_token(code_verifier, code)
+    if code_verifier_r and code:
+        token = get_token(code_verifier_r, code)
         if token:
             song_df = extract_data(token)
                 
@@ -44,6 +48,10 @@ def handle_redirect():
                 print("Datos válidos!")
                 
                 load_data(song_df)
+        else:
+            print('No existe el token de autenticación')
+    else:
+        print('No existe el codigo de verificación')
 
     return 'Redirección completada. Puedes cerrar esta ventana.'
 
@@ -67,7 +75,9 @@ def generate_code() -> tuple[str, str]:
     return (code_verifier, code_challenge)
 
 def authorize():
+    global code_verifier_r
     code_verifier, code_challenge = generate_code()
+    code_verifier_r = code_verifier
     scope = 'user-read-recently-played'
     auth_url = 'https://accounts.spotify.com/authorize'
     code_challenge_method = 'S256'
@@ -93,7 +103,7 @@ def authorize():
 
 
 def get_token(code_verifier, code):
-    code_verifier = code_verifier
+    global access_token_r
     token_url = 'https://accounts.spotify.com/api/token'
 
     payload = {
@@ -117,7 +127,8 @@ def get_token(code_verifier, code):
             # Almacenar el token de acceso
             with open(ACCESS_TOKEN_FILE, 'w') as file:
                 file.write(access_token)
-            print('Token de acceso almacenado con éxito.')
+            print('Token de acceso almacenado con éxito.') 
+            access_token_r = access_token
             return access_token
         else:
             print('Error al obtener el token de acceso.')
@@ -245,9 +256,9 @@ def run_flask():
 
 
 if __name__ == "__main__":
-    access_token = read_file(ACCESS_TOKEN_FILE)
-    if access_token:
-        song_df = extract_data(access_token)  
+    # access_token = read_file(ACCESS_TOKEN_FILE)
+    if access_token_r:
+        song_df = extract_data(access_token_r)  
         # Validate
         if check_if_valid_data(song_df):
             print("Datos válidos!")
