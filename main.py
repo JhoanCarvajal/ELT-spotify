@@ -172,8 +172,11 @@ def extract_data(token: str):
     else:
         with open(ACCESS_TOKEN_FILE, 'w') as file:
             file.write('')
-        response = r.json()
-        print('API error:', response['error']['message'])
+        try:
+            response = r.json()
+            print('API error:', response['error']['message'])
+        except Exception:
+            print('Server error: Vuelva a correr el codigo.')
         return None
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
