@@ -1,7 +1,9 @@
 import base64
 import hashlib
 import random
+import socketserver
 import string
+import sys
 from urllib.parse import parse_qs, urlencode, urlparse
 import webbrowser
 
@@ -11,7 +13,7 @@ import requests
 from datetime import datetime, timedelta
 import sqlite3
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler
 
 
 DATABASE_LOCATION = "sqlite:///my_played_tracks.sqlite"
@@ -19,7 +21,6 @@ CLIENT_ID = '630a1013a94a49c9b7bc6509ff0d9dd0'
 REDIRECT_URI = 'http://localhost:3000'
 ACCESS_TOKEN_FILE = 'access_token.txt'
 CODE_VERIFIER_FILE = 'code_verifier.txt'
-
 
 # Definir el manejador de solicitudes personalizado
 class SimpleRequestHandler(BaseHTTPRequestHandler):
@@ -38,7 +39,7 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
                 song_df = extract_data(token)
                     
                 # Validate
-                if song_df and check_if_valid_data(song_df):
+                if check_if_valid_data(song_df):
                     print("Datos válidos!")
                     
                     load_data(song_df)
@@ -47,13 +48,18 @@ class SimpleRequestHandler(BaseHTTPRequestHandler):
 
 
 # Configurar y arrancar el servidor
-def runserver(server_class=HTTPServer, handler_class=SimpleRequestHandler, port=3000):
-    server_address = ('', port)
-    httpd = server_class(server_address, handler_class)
+def runserver(port=3000):
 
-    authorize()
-
-    httpd.serve_forever()
+    with socketserver.TCPServer(("", port), SimpleRequestHandler) as httpd:
+        print("Servidor iniciado en el puerto 3000")
+        
+        try:
+            authorize()
+            # Ejecutar el servidor de forma indefinida
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print(" Servidor detenido manualmente.")
+            sys.exit(0)
 
 
 def read_file(file):
@@ -133,7 +139,7 @@ def get_token(code_verifier, code):
     else:
         print(f'Error: {response.status_code}')
         print(response.text)
-        return None
+        return pd.DataFrame([])
 
 def extract_data(token: str):
     # Extract part of the ETL process
@@ -249,7 +255,7 @@ if __name__ == "__main__":
     if access_token:
         song_df = extract_data(access_token)  
         # Validate
-        if song_df and check_if_valid_data(song_df):
+        if check_if_valid_data(song_df):
             print("Datos válidos!")
             
             load_data(song_df)
