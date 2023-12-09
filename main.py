@@ -125,7 +125,7 @@ def get_token(code_verifier, code):
     else:
         print(f'Error: {response.status_code}')
         print(response.text)
-        return pd.DataFrame([])
+        return None
 
 def extract_data(token: str):
     # Extract part of the ETL process
