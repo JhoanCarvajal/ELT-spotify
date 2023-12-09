@@ -177,7 +177,7 @@ def extract_data(token: str):
             print('API error:', response['error']['message'])
         except Exception:
             print('Server error: Vuelva a correr el codigo.')
-        return None
+        raise Exception("Server error: Vuelva a correr el codigo.")
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
     # Check if dataframe is empty
