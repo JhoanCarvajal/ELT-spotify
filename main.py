@@ -139,6 +139,8 @@ def get_token(code_verifier, code):
         return pd.DataFrame([])
 
 def extract_data(token: str):
+
+    number_of_try = 1
     # Extract part of the ETL process
 
     headers = {
@@ -187,8 +189,10 @@ def extract_data(token: str):
             response = r.json()
             print('API error:', response['error']['message'])
         except Exception:
-            print('Server error: Vuelva a correr el codigo.')
-        return pd.DataFrame([])
+            print('Server error: Reintentando...')
+            if number_of_try <= 10:
+                extract_data(token)
+            number_of_try += 1
 
 def check_if_valid_data(df: pd.DataFrame) -> bool:
     # Check if dataframe is empty
